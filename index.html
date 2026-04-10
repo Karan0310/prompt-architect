@@ -3,7 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prompt Architect Agent</title>
+<title>Prompt Architect — AI Prompt Generator for Any LLM</title>
+<meta name="description" content="Generate LLM-specific prompts powered by a deep knowledge base of 8 models. Built with Claude. Free, open source, runs in your browser.">
+
+<!-- Open Graph / LinkedIn -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Prompt Architect — AI Prompt Generator for Any LLM">
+<meta property="og:description" content="Describe your task, pick your LLM, get a prompt engineered specifically for how that model thinks. Supports Claude, ChatGPT, Gemini, Copilot, Mistral, Llama, DeepSeek, and Grok.">
+<meta property="og:url" content="https://karan0310.github.io/prompt-architect/">
+<meta property="og:image" content="https://karan0310.github.io/prompt-architect/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Prompt Architect — AI Prompt Generator for Any LLM">
+<meta name="twitter:description" content="Describe your task, pick your LLM, get a prompt engineered for how that model thinks. 8 models, deep knowledge base, free and open source.">
+<meta name="twitter:image" content="https://karan0310.github.io/prompt-architect/og-image.png">
+
+<!-- Favicon -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect rx='20' width='100' height='100' fill='%230e0e0f'/><text x='50' y='68' text-anchor='middle' font-size='55'>%E2%9C%A8</text></svg>">
+
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -236,6 +256,7 @@
   .gen-btn:hover { background: #d4b87a; transform: translateY(-1px); }
   .gen-btn:active { transform: translateY(0); }
   .gen-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  #demo-btn:hover { background: var(--surface2) !important; border-color: var(--accent) !important; transform: translateY(-1px); }
 
   /* Spinner */
   .spinner {
@@ -593,20 +614,6 @@
     <p class="subtitle">Describe your task. Pick your LLM. Get a prompt engineered for that model.<br>Then refine it through conversation with the agent.</p>
   </header>
 
-  <!-- API Key -->
-  <p class="section-label">00 — Your Anthropic API Key</p>
-  <div class="api-key-section">
-    <div class="api-key-row">
-      <input type="password" class="api-key-input" id="api-key" placeholder="sk-ant-..." autocomplete="off">
-      <button class="save-key-btn" id="save-key-btn">Save key</button>
-    </div>
-    <div class="key-status">
-      <div class="key-dot" id="key-dot"></div>
-      <span id="key-status-text">No API key set</span>
-    </div>
-    <div class="key-privacy">Your key stays in your browser (localStorage). It is only sent directly to the Anthropic API — never to any other server.</div>
-  </div>
-
   <!-- Step 1: LLM -->
   <p class="section-label">01 — Choose your target LLM</p>
   <div class="llm-grid" id="llm-grid">
@@ -672,9 +679,28 @@
     </div>
   </div>
 
-  <button class="gen-btn" id="gen-btn">
-    <span id="btn-text">Generate prompt</span>
-  </button>
+  <!-- API Key (placed after task so users see value first) -->
+  <p class="section-label" style="margin-top:20px">03 — Your Anthropic API Key</p>
+  <div class="api-key-section">
+    <div class="api-key-row">
+      <input type="password" class="api-key-input" id="api-key" placeholder="sk-ant-..." autocomplete="off">
+      <button class="save-key-btn" id="save-key-btn">Save key</button>
+    </div>
+    <div class="key-status">
+      <div class="key-dot" id="key-dot"></div>
+      <span id="key-status-text">No API key set</span>
+    </div>
+    <div class="key-privacy">Your key stays in your browser (localStorage). It is only sent directly to the Anthropic API — never to any other server.</div>
+  </div>
+
+  <div style="display:flex;gap:8px">
+    <button class="gen-btn" id="gen-btn" style="flex:1">
+      <span id="btn-text">Generate prompt</span>
+    </button>
+    <button class="gen-btn" id="demo-btn" style="flex:0 0 auto;background:var(--surface);color:var(--accent);border:1px solid var(--border);padding:16px 24px">
+      Demo
+    </button>
+  </div>
 
   <div class="error-box" id="error-box"></div>
 
@@ -965,6 +991,9 @@ SPECIAL: DeepSearch for thorough research, Think mode for reasoning, real-time X
     // Generate
     genBtn.addEventListener('click', generate);
 
+    // Demo mode
+    $('demo-btn').addEventListener('click', runDemo);
+
     // Copy & Download
     $('copy-btn').addEventListener('click', copyPrompt);
     $('download-btn').addEventListener('click', downloadPrompt);
@@ -1188,6 +1217,160 @@ Write the prompt now:`;
     } finally {
       setLoading(false);
     }
+  }
+
+  // ===== DEMO MODE =====
+  const DEMO_SAMPLES = {
+    "Claude (Anthropic)": {
+      task: "Analyze customer reviews and identify the top 5 recurring complaints",
+      prompt: `<context>
+You are analyzing customer reviews for a product team that needs to prioritize fixes for the next sprint. The reviews come from multiple channels (app store, support tickets, social media). Your analysis will directly influence the product roadmap.
+</context>
+
+<task>
+Analyze the customer reviews provided below and identify the top 5 recurring complaints.
+</task>
+
+<reviews>
+[Paste your customer reviews here]
+</reviews>
+
+<instructions>
+For each complaint:
+1. Name the complaint pattern in 3-5 words
+2. Estimate what percentage of reviews mention it
+3. Provide 2-3 direct quote snippets as evidence
+4. Rate the sentiment intensity: mild / moderate / severe
+5. Suggest one concrete product improvement that would address it
+
+Think through the reviews systematically before identifying patterns. Look for complaints that may be worded differently but describe the same underlying issue.
+</instructions>
+
+<output_format>
+Return your analysis as a numbered list (1-5, ranked by frequency). For each item use this structure:
+
+**#N: [Complaint Name]**
+- Frequency: ~X% of reviews
+- Severity: [mild/moderate/severe]
+- Evidence: "[quote 1]", "[quote 2]"
+- Suggested fix: [actionable improvement]
+
+End with a 2-sentence executive summary of the overall sentiment trend.
+</output_format>`,
+      explanation: "This prompt uses Claude's preferred XML tag structure (<context>, <task>, <instructions>, <output_format>) to create clear semantic boundaries. The WHY context tells Claude this feeds into a product roadmap, which improves its judgment about what constitutes a meaningful complaint. The instruction to 'think through systematically before identifying patterns' leverages Claude's strong reasoning. Recommended temperature: 0.2-0.4 for consistent analysis."
+    },
+    "ChatGPT / GPT-4o (OpenAI)": {
+      task: "Analyze customer reviews and identify the top 5 recurring complaints",
+      prompt: `## Role
+You are a senior product analyst with 10 years of experience in customer feedback analysis and sentiment mining.
+
+## Task
+Analyze the following customer reviews and identify the **top 5 recurring complaints**, ranked by frequency.
+
+## Reviews
+[Paste your customer reviews here]
+
+## Instructions
+1. Read through all reviews and categorize each complaint
+2. Group similar complaints together, even if worded differently
+3. Rank the top 5 by how frequently they appear
+4. For each complaint, provide:
+   - A clear 3-5 word label
+   - Estimated percentage of reviews mentioning it
+   - 2-3 direct quote examples
+   - Sentiment intensity (mild / moderate / severe)
+   - One specific, actionable product improvement
+
+## Output Format
+Use this exact structure for each complaint:
+
+### #1: [Complaint Name]
+- **Frequency:** ~X% of reviews
+- **Severity:** mild / moderate / severe
+- **Evidence:** "[quote]", "[quote]"
+- **Suggested Fix:** [improvement]
+
+## Final Step
+End with a 2-sentence executive summary of overall customer sentiment.
+
+Do NOT include complaints mentioned in fewer than 3 reviews. If you're uncertain about a pattern, note your confidence level.`,
+      explanation: "This prompt uses ChatGPT's preferred patterns: a strong role assignment ('senior product analyst with 10 years experience') to activate expertise, markdown ## headers for clear sections, and numbered steps that GPT-4o follows almost literally. The 'Do NOT' constraint prevents a common GPT failure mode of including low-signal complaints. Recommended temperature: 0.3 for consistent analysis. Enable JSON mode if you need structured output downstream."
+    },
+    "Llama (Meta, open source)": {
+      task: "Analyze customer reviews and identify the top 5 recurring complaints",
+      prompt: `TASK: Analyze customer reviews and find the top 5 most common complaints.
+
+INPUT FORMAT: A list of customer review texts.
+
+INPUT:
+[Paste your customer reviews here]
+
+INSTRUCTIONS:
+1. Read each review one at a time.
+2. Write down every complaint you find.
+3. Group complaints that describe the same problem together.
+4. Count how many reviews mention each complaint group.
+5. Pick the top 5 complaint groups with the highest count.
+6. For each of the top 5, fill in the OUTPUT FORMAT below.
+
+OUTPUT FORMAT (repeat for each of the 5 complaints):
+COMPLAINT #[number]: [short name, 3-5 words]
+FREQUENCY: approximately [X]% of reviews
+SEVERITY: [mild OR moderate OR severe]
+QUOTE 1: "[exact quote from a review]"
+QUOTE 2: "[exact quote from a review]"
+SUGGESTED FIX: [one specific improvement]
+
+EXAMPLE:
+COMPLAINT #1: Slow app loading time
+FREQUENCY: approximately 35% of reviews
+SEVERITY: severe
+QUOTE 1: "The app takes forever to open"
+QUOTE 2: "I wait 10+ seconds just to see the home screen"
+SUGGESTED FIX: Implement lazy loading and reduce initial bundle size
+
+FINAL LINE: Write one sentence summarizing the overall customer sentiment.
+
+IMPORTANT RULES:
+- Output ONLY the format above. No extra text.
+- Do not include complaints from fewer than 3 reviews.
+- Rank complaints from most frequent to least frequent.`,
+      explanation: "This prompt is built for Llama's explicit-instruction style: clear labeled delimiters (TASK:, INPUT:, OUTPUT FORMAT:), a complete worked EXAMPLE showing the exact format, and IMPORTANT RULES repeated at the end as a constraint reminder. Llama models infer less from context, so every expectation is spelled out — including 'Output ONLY the format above.' The few-shot example is critical for Llama to produce consistent output. Recommended temperature: 0.2 for analysis tasks. If using a quantized model, keep the prompt under 2K tokens."
+    }
+  };
+
+  function runDemo() {
+    // Pick a demo based on selected LLM or default to Claude
+    const demoLLM = selectedLLM && DEMO_SAMPLES[selectedLLM] ? selectedLLM : 'Claude (Anthropic)';
+    const demo = DEMO_SAMPLES[demoLLM];
+
+    // Auto-select the LLM button if not selected
+    if (!selectedLLM) {
+      const btn = document.querySelector('[data-llm="Claude (Anthropic)"]');
+      if (btn) { btn.click(); selectedLLM = 'Claude (Anthropic)'; }
+    }
+
+    // Fill in the task
+    taskInput.value = demo.task;
+
+    // Show the output
+    currentPrompt = demo.prompt;
+    promptOutput.textContent = demo.prompt;
+    explanationOutput.innerHTML = `<strong>Why this works for ${escapeHTML(demoLLM)}:</strong> ${escapeHTML(demo.explanation)}`;
+    explanationOutput.style.display = 'block';
+    outputSection.style.display = 'block';
+
+    // Stats
+    const wordCount = demo.prompt.split(/\s+/).length;
+    tokenCount.textContent = `~${Math.round(wordCount * 1.3)} tokens | ${wordCount} words | DEMO`;
+
+    // Show agent chat
+    agentChat.classList.add('visible');
+    chatMessages.innerHTML = '';
+    appendChatMsg('agent', 'This is a demo output. Enter your Anthropic API key above and click "Generate" to create real prompts, or click a quick-refine chip to see how refinement works.');
+    updateTurnCount();
+
+    outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   // ===== AGENT REFINEMENT =====
