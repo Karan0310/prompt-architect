@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Architect</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e0e0f;
+    --surface: #161618;
+    --surface2: #1e1e21;
+    --border: rgba(255,255,255,0.08);
+    --border-hover: rgba(255,255,255,0.16);
+    --text: #f0ede8;
+    --muted: #7a7875;
+    --accent: #c8a96e;
+    --accent-dim: rgba(200,169,110,0.12);
+    --accent-glow: rgba(200,169,110,0.06);
+    --claude: #a78bfa;
+    --chatgpt: #4ade80;
+    --gemini: #60a5fa;
+    --copilot: #fb923c;
+    --mistral: #f472b6;
+    --llama: #facc15;
+    --deepseek: #38bdf8;
+    --grok: #f87171;
+    --radius: 10px;
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 80px;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  .wrap { width: 100%; max-width: 760px; position: relative; z-index: 1; }
+
+  header { text-align: center; margin-bottom: 48px; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+    opacity: 0.8;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 6vw, 56px);
+    font-weight: 300;
+    font-style: italic;
+    color: var(--text);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+  h1 span { color: var(--accent); font-style: normal; }
+  .subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 12px;
+    letter-spacing: 0.02em;
+    line-height: 1.7;
+  }
+
+  /* API Key */
+  .api-key-section {
+    margin-bottom: 28px;
+  }
+  .api-key-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .api-key-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .api-key-input::placeholder { color: var(--muted); }
+  .api-key-input:focus { border-color: var(--accent); }
+  .key-status {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .key-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.2s;
+  }
+  .key-dot.connected { background: #4ade80; }
+  .save-key-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+  .save-key-btn:hover { color: var(--text); border-color: var(--border-hover); }
+
+  /* LLM Selector */
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .llm-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .llm-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+  }
+  .llm-btn:hover { border-color: var(--border-hover); background: var(--surface2); }
+  .llm-btn.selected { border-color: var(--llm-color, var(--accent)); background: var(--accent-dim); }
+  .llm-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--llm-color); }
+  .llm-name { font-size: 12px; font-weight: 500; color: var(--text); }
+  .llm-maker { font-size: 10px; color: var(--muted); }
+
+  /* Task input */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text);
+    resize: vertical;
+    min-height: 120px;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+    outline: none;
+  }
+  textarea::placeholder { color: var(--muted); }
+  textarea:focus { border-color: var(--accent); }
+
+  /* Options */
+  .options-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  .opt-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: var(--font-mono);
+  }
+  .opt-chip:hover { border-color: var(--border-hover); color: var(--text); }
+  .opt-chip.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+  /* Generate button */
+  .gen-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: #0e0e0f;
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .gen-btn:hover { background: #d4b87a; transform: translateY(-1px); }
+  .gen-btn:active { transform: translateY(0); }
+  .gen-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* Spinner */
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(14,14,15,0.3);
+    border-top-color: #0e0e0f;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Output */
+  #output-section { display: none; animation: fadeUp 0.4s ease; }
+  @keyframes fadeUp { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
+
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .output-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .copy-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--border-hover); }
+  .copy-btn.copied { color: var(--accent); border-color: var(--accent); }
+
+  #prompt-output {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 80px;
+  }
+
+  /* Streaming cursor */
+  #prompt-output.streaming::after {
+    content: '';
+    display: inline-block;
+    width: 2px;
+    height: 14px;
+    background: var(--accent);
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    animation: blink 0.6s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* Explanation */
+  #explanation-output {
+    margin-top: 14px;
+    padding: 16px;
+    background: var(--accent-glow);
+    border: 1px solid rgba(200,169,110,0.15);
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--muted);
+    display: none;
+  }
+  #explanation-output strong { color: var(--accent); font-weight: 500; }
+
+  /* Error */
+  .error-box {
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 12px;
+    color: #fca5a5;
+    margin-top: 12px;
+    display: none;
+  }
+
+  /* Token counter */
+  .token-counter {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .token-info {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  /* Tips */
+  .tips {
+    margin-top: 28px;
+    padding-top: 28px;
+    border-top: 1px solid var(--border);
+  }
+  .tip-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 12px; }
+  .tip-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .tip-card:hover { border-color: var(--border-hover); background: var(--surface2); }
+  .tip-title { font-size: 11px; color: var(--accent); margin-bottom: 4px; letter-spacing: 0.03em; }
+  .tip-text { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* History panel */
+  .history-section { margin-top: 28px; padding-top: 28px; border-top: 1px solid var(--border); }
+  .history-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-top: 8px;
+    cursor: pointer;
+    transition: all 0.18s;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .history-item:hover { border-color: var(--border-hover); background: var(--surface2); }
+  .history-meta { flex: 1; min-width: 0; }
+  .history-llm { font-size: 10px; color: var(--accent); letter-spacing: 0.08em; text-transform: uppercase; }
+  .history-task { font-size: 11px; color: var(--muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .history-time { font-size: 10px; color: var(--muted); white-space: nowrap; opacity: 0.6; }
+  .history-delete {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 2px 6px;
+    opacity: 0;
+    transition: opacity 0.18s;
+  }
+  .history-item:hover .history-delete { opacity: 0.6; }
+  .history-delete:hover { opacity: 1 !important; color: #fca5a5; }
+  .clear-history-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .clear-history-btn:hover { color: #fca5a5; border-color: rgba(239,68,68,0.3); }
+
+  @media (max-width: 600px) {
+    .llm-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">AI Prompt Engineering</p>
+    <h1>Prompt <span>Architect</span></h1>
+    <p class="subtitle">Describe your task. Pick your LLM.<br>Get a prompt engineered specifically for how that model thinks.</p>
+  </header>
+
+  <!-- API Key -->
+  <p class="section-label">00 — Your Anthropic API Key</p>
+  <div class="api-key-section">
+    <div class="api-key-row">
+      <input type="password" class="api-key-input" id="api-key" placeholder="sk-ant-..." autocomplete="off">
+      <button class="save-key-btn" onclick="saveKey()">Save key</button>
+    </div>
+    <div class="key-status">
+      <div class="key-dot" id="key-dot"></div>
+      <span id="key-status-text">No API key set</span>
+    </div>
+  </div>
+
+  <!-- Step 1: LLM -->
+  <p class="section-label">01 — Choose your target LLM</p>
+  <div class="llm-grid">
+    <button class="llm-btn" data-llm="Claude (Anthropic)" style="--llm-color:#a78bfa" onclick="selectLLM(this)">
+      <div class="llm-dot"></div>
+      <span class="llm-name">Claude</span>
+      <span class="llm-maker">Anthropic</span>
+    </button>
+    <button class="llm-btn" data-llm="ChatGPT / GPT-4o (OpenAI)" style="--llm-color:#4ade80" onclick="selectLLM(this)">
+      <div class="llm-dot"></div>
+      <span class="llm-name">ChatGPT</span>
+      <span class="llm-maker">OpenAI</span>
+    </button>
+    <button class="llm-btn" data-llm="Gemini (Google DeepMind)" style="--llm-color:#60a5fa" onclick="selectLLM(this)">
+      <div class="llm-dot"></div>
+      <span class="llm-name">Gemini</span>
+      <span class="llm-maker">Google</span>
+    </button>
+    <button class="llm-btn" data-llm="Microsoft Copilot (GPT-4 based)" style="--llm-color:#fb923c" onclick="selectLLM(this)">
+      <div class="llm-dot"></div>
+      <span class="llm-name">Copilot</span>
+      <span class="llm-maker">Microsoft</span>
+    </button>
+    <button class="llm-btn" data-llm="Mistral (Mistral AI)" style="--llm-color:#f472b6" onclick="selectLLM(this)">
+      <div class="llm-dot"></div>
+      <span class="llm-name">Mistral</span>
+      <span class="llm-maker">Mistral AI</span>
+    </button>
+    <button class="llm-btn" data-llm="Llama (Meta, open source)" style="--llm-color:#facc15" onclick="selectLLM(this)">
+      <div class="llm-dot"></div>
+      <span class="llm-name">Llama</span>
+      <span class="llm-maker">Meta</span>
+    </button>
+    <button class="llm-btn" data-llm="DeepSeek (DeepSeek AI)" style="--llm-color:#38bdf8" onclick="selectLLM(this)">
+      <div class="llm-dot"></div>
+      <span class="llm-name">DeepSeek</span>
+      <span class="llm-maker">DeepSeek AI</span>
+    </button>
+    <button class="llm-btn" data-llm="Grok (xAI)" style="--llm-color:#f87171" onclick="selectLLM(this)">
+      <div class="llm-dot"></div>
+      <span class="llm-name">Grok</span>
+      <span class="llm-maker">xAI</span>
+    </button>
+  </div>
+
+  <!-- Step 2: Task -->
+  <p class="section-label">02 — Describe your task</p>
+  <div class="card">
+    <textarea id="task-input" placeholder="e.g. I need to summarize long legal contracts and extract the key obligations, deadlines, and penalty clauses into a structured format..."></textarea>
+    <div class="options-row">
+      <span class="section-label" style="margin:0;align-self:center">Output style:</span>
+      <button class="opt-chip active" onclick="toggleChip(this,'style')" data-val="detailed and thorough">Detailed</button>
+      <button class="opt-chip" onclick="toggleChip(this,'style')" data-val="concise and brief">Concise</button>
+      <button class="opt-chip" onclick="toggleChip(this,'style')" data-val="step-by-step structured">Step-by-step</button>
+      <button class="opt-chip" onclick="toggleChip(this,'style')" data-val="creative and exploratory">Creative</button>
+    </div>
+    <div class="options-row" style="margin-top:10px">
+      <span class="section-label" style="margin:0;align-self:center">Include:</span>
+      <button class="opt-chip active" onclick="toggleChip(this,'include')" data-val="examples">Examples</button>
+      <button class="opt-chip active" onclick="toggleChip(this,'include')" data-val="reasoning steps">Reasoning</button>
+      <button class="opt-chip" onclick="toggleChip(this,'include')" data-val="role/persona">Role persona</button>
+      <button class="opt-chip" onclick="toggleChip(this,'include')" data-val="format constraints">Format rules</button>
+    </div>
+  </div>
+
+  <button class="gen-btn" id="gen-btn" onclick="generate()">
+    <span id="btn-text">Generate prompt</span>
+  </button>
+
+  <div class="error-box" id="error-box"></div>
+
+  <!-- Output -->
+  <div id="output-section">
+    <div class="divider"></div>
+    <div class="output-header">
+      <span class="output-label">Generated prompt</span>
+      <div style="display:flex;gap:8px">
+        <button class="copy-btn" onclick="copyPrompt()">Copy</button>
+        <button class="copy-btn" onclick="downloadPrompt()">Download</button>
+      </div>
+    </div>
+    <div id="prompt-output"></div>
+    <div class="token-counter">
+      <span class="token-info" id="token-count"></span>
+    </div>
+    <div id="explanation-output"></div>
+  </div>
+
+  <!-- Example tasks -->
+  <div class="tips">
+    <p class="section-label">Try an example task</p>
+    <div class="tip-grid">
+      <div class="tip-card" onclick="fillExample('Analyze customer reviews and identify the top 5 recurring complaints, their sentiment intensity, and suggested product improvements.')">
+        <p class="tip-title">Review analysis</p>
+        <p class="tip-text">Extract complaints and improvements from customer feedback</p>
+      </div>
+      <div class="tip-card" onclick="fillExample('Write a cold outreach email to a VP of Engineering at a Series B startup to pitch our developer tooling product.')">
+        <p class="tip-title">Sales outreach</p>
+        <p class="tip-text">Cold email for developer tooling sales</p>
+      </div>
+      <div class="tip-card" onclick="fillExample('Debug this Python function that processes a pandas dataframe — it throws a KeyError intermittently and I cannot reproduce it consistently.')">
+        <p class="tip-title">Code debugging</p>
+        <p class="tip-text">Help debugging an intermittent Python error</p>
+      </div>
+      <div class="tip-card" onclick="fillExample('Generate 10 creative marketing campaign concepts for a sustainable sneaker brand targeting Gen Z consumers.')">
+        <p class="tip-title">Creative brainstorm</p>
+        <p class="tip-text">Marketing ideas for a sustainable brand</p>
+      </div>
+      <div class="tip-card" onclick="fillExample('Translate this dense academic paper abstract into plain English that a non-expert could understand in under 60 seconds.')">
+        <p class="tip-title">Simplification</p>
+        <p class="tip-text">Make academic writing accessible</p>
+      </div>
+      <div class="tip-card" onclick="fillExample('Design a 12-week workout plan for someone who has 45 minutes three times a week and wants to build strength without a gym.')">
+        <p class="tip-title">Structured planning</p>
+        <p class="tip-text">Personalized fitness plan creation</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="history-section" id="history-section" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <p class="section-label" style="margin:0">Prompt history</p>
+      <button class="clear-history-btn" onclick="clearHistory()">Clear all</button>
+    </div>
+    <div id="history-list"></div>
+  </div>
+</div>
+
+<script>
+  let selectedLLM = null;
+  let selectedStyle = 'detailed and thorough';
+  let selectedIncludes = new Set(['examples', 'reasoning steps']);
+  let apiKey = '';
+  let currentAbort = null;
+
+  // Load saved key on startup
+  (function init() {
+    const saved = localStorage.getItem('pa_api_key');
+    if (saved) {
+      apiKey = saved;
+      document.getElementById('api-key').value = saved;
+      document.getElementById('key-dot').classList.add('connected');
+      document.getElementById('key-status-text').textContent = 'API key saved locally';
+    }
+    renderHistory();
+  })();
+
+  function saveKey() {
+    const val = document.getElementById('api-key').value.trim();
+    if (!val) return;
+    apiKey = val;
+    localStorage.setItem('pa_api_key', val);
+    document.getElementById('key-dot').classList.add('connected');
+    document.getElementById('key-status-text').textContent = 'API key saved locally';
+  }
+
+  function selectLLM(btn) {
+    document.querySelectorAll('.llm-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedLLM = btn.dataset.llm;
+  }
+
+  function toggleChip(chip, group) {
+    if (group === 'style') {
+      document.querySelectorAll(`[onclick*="'style'"]`).forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      selectedStyle = chip.dataset.val;
+    } else {
+      chip.classList.toggle('active');
+      if (chip.classList.contains('active')) selectedIncludes.add(chip.dataset.val);
+      else selectedIncludes.delete(chip.dataset.val);
+    }
+  }
+
+  function fillExample(text) {
+    document.getElementById('task-input').value = text;
+    document.getElementById('task-input').focus();
+  }
+
+  async function generate() {
+    const task = document.getElementById('task-input').value.trim();
+    if (!task) { showError('Please describe your task first.'); return; }
+    if (!selectedLLM) { showError('Please select a target LLM.'); return; }
+    if (!apiKey) { showError('Please enter your Anthropic API key above.'); return; }
+
+    hideError();
+    setLoading(true);
+
+    // Abort any previous in-flight request
+    if (currentAbort) currentAbort.abort();
+    currentAbort = new AbortController();
+
+    const includes = Array.from(selectedIncludes).join(', ') || 'none';
+
+    const metaPrompt = `You are an expert prompt engineer who deeply understands how different LLMs process instructions and what patterns make them respond best.
+
+The user wants to accomplish this task:
+<task>
+${task}
+</task>
+
+Target LLM: ${selectedLLM}
+Desired output style: ${selectedStyle}
+Elements to include: ${includes}
+
+Your job: Write the OPTIMAL prompt for ${selectedLLM} specifically, exploiting that model's known strengths and quirks. Follow these rules:
+
+1. Write the ACTUAL prompt the user should paste into ${selectedLLM} — not instructions about how to write a prompt.
+2. Tailor it specifically to ${selectedLLM}'s behavior:
+   - Claude: Use XML tags for structure, direct instruction style, include context about WHY if helpful, leverage its long-form reasoning strength
+   - ChatGPT/GPT-4o: Use clear role assignment ("You are ..."), numbered steps, benefit from its instruction-following; can use markdown headers effectively
+   - Gemini: Use factual grounding cues, leverage its multimodal awareness, explicit format requests, structured output requests work well
+   - Copilot: Lean into productivity/professional framing, clear task scoping, works well with "Act as a professional..." framing
+   - Mistral: Clear, explicit instructions work best; less implicit reasoning needed; structured format requests
+   - Llama: Explicit step-by-step instructions, clear output format specification, less reliant on implicit world knowledge
+   - DeepSeek: Strong at code and reasoning chains; benefits from explicit chain-of-thought prompting, clear reasoning frameworks, and structured output
+   - Grok: Direct, no-nonsense tone; handles technical topics well; benefits from explicit constraints and clear task boundaries
+3. Include the requested elements (${includes}) naturally woven in — not bolted on.
+4. Output style should be: ${selectedStyle}
+5. Make the prompt ready to use immediately — no placeholders except where the user needs to fill in their actual content.
+
+After the prompt, add a section starting with exactly "---EXPLANATION---" then write 2-3 sentences explaining the key choices you made for ${selectedLLM} specifically.
+
+Write the prompt now:`;
+
+    const outputEl = document.getElementById('prompt-output');
+    const explEl = document.getElementById('explanation-output');
+    outputEl.textContent = '';
+    outputEl.classList.add('streaming');
+    explEl.style.display = 'none';
+    document.getElementById('output-section').style.display = 'block';
+    document.getElementById('output-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('token-count').textContent = '';
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 4096,
+          stream: true,
+          messages: [{ role: 'user', content: metaPrompt }]
+        }),
+        signal: currentAbort.signal
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error?.message || `API error ${res.status}`);
+      }
+
+      // SSE streaming
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const data = line.slice(6).trim();
+          if (data === '[DONE]') continue;
+
+          try {
+            const evt = JSON.parse(data);
+            if (evt.type === 'content_block_delta' && evt.delta?.text) {
+              fullText += evt.delta.text;
+
+              // Split live: show prompt part, hold explanation
+              const splitIdx = fullText.indexOf('---EXPLANATION---');
+              if (splitIdx === -1) {
+                outputEl.textContent = fullText;
+              } else {
+                outputEl.textContent = fullText.slice(0, splitIdx).trim();
+              }
+            }
+            if (evt.type === 'message_delta' && evt.usage) {
+              document.getElementById('token-count').textContent =
+                `${evt.usage.output_tokens} tokens generated`;
+            }
+          } catch {}
+        }
+      }
+
+      outputEl.classList.remove('streaming');
+
+      // Final split
+      const parts = fullText.split('---EXPLANATION---');
+      const promptText = parts[0].trim();
+      const explanation = parts[1] ? parts[1].trim() : null;
+
+      outputEl.textContent = promptText;
+
+      if (explanation) {
+        explEl.innerHTML = `<strong>Why this works for ${escapeHTML(selectedLLM)}:</strong> ${escapeHTML(explanation)}`;
+        explEl.style.display = 'block';
+      }
+
+      // Rough word-based token estimate
+      const wordCount = promptText.split(/\s+/).length;
+      const tokenEst = Math.round(wordCount * 1.3);
+      document.getElementById('token-count').textContent =
+        `~${tokenEst} tokens | ${wordCount} words`;
+
+      // Save to history
+      saveToHistory(selectedLLM, task, promptText, explanation);
+
+    } catch (err) {
+      outputEl.classList.remove('streaming');
+      if (err.name !== 'AbortError') {
+        showError('Error: ' + err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function escapeHTML(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function setLoading(on) {
+    const btn = document.getElementById('gen-btn');
+    btn.disabled = on;
+    btn.innerHTML = on
+      ? `<div class="spinner"></div><span>Architecting your prompt...</span>`
+      : `<span id="btn-text">Generate prompt</span>`;
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-box');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+  function hideError() {
+    document.getElementById('error-box').style.display = 'none';
+  }
+
+  async function copyPrompt() {
+    const text = document.getElementById('prompt-output').textContent;
+    await navigator.clipboard.writeText(text);
+    const btns = document.querySelectorAll('.copy-btn');
+    btns[0].textContent = 'Copied!';
+    btns[0].classList.add('copied');
+    setTimeout(() => { btns[0].textContent = 'Copy'; btns[0].classList.remove('copied'); }, 2000);
+  }
+
+  function downloadPrompt() {
+    const text = document.getElementById('prompt-output').textContent;
+    const blob = new Blob([text], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `prompt_${selectedLLM?.replace(/[^a-zA-Z]/g,'_') || 'output'}_${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  // History management
+  function getHistory() {
+    try { return JSON.parse(localStorage.getItem('pa_history') || '[]'); }
+    catch { return []; }
+  }
+
+  function saveToHistory(llm, task, prompt, explanation) {
+    const history = getHistory();
+    history.unshift({
+      id: Date.now(),
+      llm,
+      task: task.slice(0, 120),
+      prompt,
+      explanation,
+      time: new Date().toLocaleString()
+    });
+    // Keep last 20
+    if (history.length > 20) history.length = 20;
+    localStorage.setItem('pa_history', JSON.stringify(history));
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const history = getHistory();
+    const section = document.getElementById('history-section');
+    const list = document.getElementById('history-list');
+
+    if (history.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    section.style.display = 'block';
+    list.innerHTML = history.map(h => `
+      <div class="history-item" onclick="loadHistory(${h.id})">
+        <div class="history-meta">
+          <div class="history-llm">${escapeHTML(h.llm)}</div>
+          <div class="history-task">${escapeHTML(h.task)}</div>
+        </div>
+        <span class="history-time">${escapeHTML(h.time)}</span>
+        <button class="history-delete" onclick="event.stopPropagation();deleteHistory(${h.id})">x</button>
+      </div>
+    `).join('');
+  }
+
+  function loadHistory(id) {
+    const item = getHistory().find(h => h.id === id);
+    if (!item) return;
+
+    document.getElementById('prompt-output').textContent = item.prompt;
+    const explEl = document.getElementById('explanation-output');
+    if (item.explanation) {
+      explEl.innerHTML = `<strong>Why this works for ${escapeHTML(item.llm)}:</strong> ${escapeHTML(item.explanation)}`;
+      explEl.style.display = 'block';
+    } else {
+      explEl.style.display = 'none';
+    }
+    document.getElementById('output-section').style.display = 'block';
+    document.getElementById('output-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function deleteHistory(id) {
+    const history = getHistory().filter(h => h.id !== id);
+    localStorage.setItem('pa_history', JSON.stringify(history));
+    renderHistory();
+  }
+
+  function clearHistory() {
+    localStorage.removeItem('pa_history');
+    renderHistory();
+  }
+
+  // Keyboard shortcut
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      generate();
+    }
+  });
+</script>
+</body>
+</html>
