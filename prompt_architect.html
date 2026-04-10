@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prompt Architect</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap" rel="stylesheet">
+<title>Prompt Architect Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -12,6 +12,7 @@
     --bg: #0e0e0f;
     --surface: #161618;
     --surface2: #1e1e21;
+    --surface3: #252528;
     --border: rgba(255,255,255,0.08);
     --border-hover: rgba(255,255,255,0.16);
     --text: #f0ede8;
@@ -19,14 +20,10 @@
     --accent: #c8a96e;
     --accent-dim: rgba(200,169,110,0.12);
     --accent-glow: rgba(200,169,110,0.06);
-    --claude: #a78bfa;
-    --chatgpt: #4ade80;
-    --gemini: #60a5fa;
-    --copilot: #fb923c;
-    --mistral: #f472b6;
-    --llama: #facc15;
-    --deepseek: #38bdf8;
-    --grok: #f87171;
+    --error: #fca5a5;
+    --error-bg: rgba(239,68,68,0.08);
+    --error-border: rgba(239,68,68,0.2);
+    --success: #4ade80;
     --radius: 10px;
     --font-display: 'Fraunces', Georgia, serif;
     --font-mono: 'DM Mono', monospace;
@@ -84,9 +81,7 @@
   }
 
   /* API Key */
-  .api-key-section {
-    margin-bottom: 28px;
-  }
+  .api-key-section { margin-bottom: 28px; }
   .api-key-row {
     display: flex;
     gap: 8px;
@@ -120,7 +115,7 @@
     background: var(--muted);
     transition: background 0.2s;
   }
-  .key-dot.connected { background: #4ade80; }
+  .key-dot.connected { background: var(--success); }
   .save-key-btn {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -135,7 +130,7 @@
   }
   .save-key-btn:hover { color: var(--text); border-color: var(--border-hover); }
 
-  /* LLM Selector */
+  /* Section labels */
   .section-label {
     font-size: 10px;
     letter-spacing: 0.15em;
@@ -144,13 +139,13 @@
     margin-bottom: 12px;
   }
 
+  /* LLM grid */
   .llm-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 8px;
     margin-bottom: 28px;
   }
-
   .llm-btn {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -170,7 +165,7 @@
   .llm-name { font-size: 12px; font-weight: 500; color: var(--text); }
   .llm-maker { font-size: 10px; color: var(--muted); }
 
-  /* Task input */
+  /* Card */
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -249,6 +244,15 @@
     border-top-color: #0e0e0f;
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  .spinner-light {
+    width: 12px; height: 12px;
+    border: 2px solid rgba(255,255,255,0.15);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -269,7 +273,7 @@
     color: var(--accent);
   }
 
-  .copy-btn {
+  .action-btn {
     background: var(--surface2);
     border: 1px solid var(--border);
     border-radius: 6px;
@@ -280,8 +284,8 @@
     cursor: pointer;
     transition: all 0.18s;
   }
-  .copy-btn:hover { color: var(--text); border-color: var(--border-hover); }
-  .copy-btn.copied { color: var(--accent); border-color: var(--accent); }
+  .action-btn:hover { color: var(--text); border-color: var(--border-hover); }
+  .action-btn.copied { color: var(--accent); border-color: var(--accent); }
 
   #prompt-output {
     background: var(--surface2);
@@ -310,7 +314,7 @@
   @keyframes blink { 50% { opacity: 0; } }
 
   /* Explanation */
-  #explanation-output {
+  .explanation-box {
     margin-top: 14px;
     padding: 16px;
     background: var(--accent-glow);
@@ -321,32 +325,167 @@
     color: var(--muted);
     display: none;
   }
-  #explanation-output strong { color: var(--accent); font-weight: 500; }
+  .explanation-box strong { color: var(--accent); font-weight: 500; }
 
   /* Error */
   .error-box {
-    background: rgba(239,68,68,0.08);
-    border: 1px solid rgba(239,68,68,0.2);
+    background: var(--error-bg);
+    border: 1px solid var(--error-border);
     border-radius: 8px;
     padding: 14px 16px;
     font-size: 12px;
-    color: #fca5a5;
+    color: var(--error);
     margin-top: 12px;
     display: none;
   }
 
-  /* Token counter */
-  .token-counter {
-    margin-top: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+  /* Token info */
+  .token-counter { margin-top: 10px; }
   .token-info {
     font-size: 10px;
     color: var(--muted);
     letter-spacing: 0.04em;
   }
+
+  /* ===== AGENT REFINEMENT CHAT ===== */
+  .agent-chat {
+    margin-top: 20px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    overflow: hidden;
+    display: none;
+  }
+  .agent-chat.visible { display: block; animation: fadeUp 0.4s ease; }
+
+  .chat-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chat-header-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .chat-header-text {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .chat-turn-count {
+    margin-left: auto;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .chat-messages {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 12px 16px;
+  }
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-track { background: transparent; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .chat-msg {
+    margin-bottom: 12px;
+    animation: fadeUp 0.3s ease;
+  }
+  .chat-msg-role {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .chat-msg-role.user-role { color: var(--muted); }
+  .chat-msg-role.agent-role { color: var(--accent); }
+  .chat-msg-body {
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 8px;
+  }
+  .chat-msg.user-msg .chat-msg-body {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+  }
+  .chat-msg.agent-msg .chat-msg-body {
+    background: var(--accent-glow);
+    border: 1px solid rgba(200,169,110,0.12);
+  }
+
+  .chat-thinking {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .chat-input-row {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .chat-input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .chat-input::placeholder { color: var(--muted); }
+  .chat-input:focus { border-color: var(--accent); }
+  .chat-send-btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: #0e0e0f;
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+  .chat-send-btn:hover { background: #d4b87a; }
+  .chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Quick refine chips */
+  .refine-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 8px 16px 4px;
+  }
+  .refine-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 4px 10px;
+    font-size: 10px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: var(--font-mono);
+  }
+  .refine-chip:hover { border-color: var(--border-hover); color: var(--text); }
 
   /* Tips */
   .tips {
@@ -369,7 +508,7 @@
 
   .divider { height: 1px; background: var(--border); margin: 24px 0; }
 
-  /* History panel */
+  /* History */
   .history-section { margin-top: 28px; padding-top: 28px; border-top: 1px solid var(--border); }
   .history-item {
     background: var(--surface);
@@ -390,17 +529,12 @@
   .history-task { font-size: 11px; color: var(--muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .history-time { font-size: 10px; color: var(--muted); white-space: nowrap; opacity: 0.6; }
   .history-delete {
-    background: none;
-    border: none;
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 12px;
-    padding: 2px 6px;
-    opacity: 0;
-    transition: opacity 0.18s;
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 12px; padding: 2px 6px;
+    opacity: 0; transition: opacity 0.18s;
   }
   .history-item:hover .history-delete { opacity: 0.6; }
-  .history-delete:hover { opacity: 1 !important; color: #fca5a5; }
+  .history-delete:hover { opacity: 1 !important; color: var(--error); }
   .clear-history-btn {
     background: none;
     border: 1px solid var(--border);
@@ -412,7 +546,7 @@
     cursor: pointer;
     transition: all 0.18s;
   }
-  .clear-history-btn:hover { color: #fca5a5; border-color: rgba(239,68,68,0.3); }
+  .clear-history-btn:hover { color: var(--error); border-color: var(--error-border); }
 
   @media (max-width: 600px) {
     .llm-grid { grid-template-columns: repeat(2, 1fr); }
@@ -422,9 +556,9 @@
 <body>
 <div class="wrap">
   <header>
-    <p class="eyebrow">AI Prompt Engineering</p>
+    <p class="eyebrow">AI Prompt Engineering Agent</p>
     <h1>Prompt <span>Architect</span></h1>
-    <p class="subtitle">Describe your task. Pick your LLM.<br>Get a prompt engineered specifically for how that model thinks.</p>
+    <p class="subtitle">Describe your task. Pick your LLM. Get a prompt engineered for that model.<br>Then refine it through conversation with the agent.</p>
   </header>
 
   <!-- API Key -->
@@ -432,7 +566,7 @@
   <div class="api-key-section">
     <div class="api-key-row">
       <input type="password" class="api-key-input" id="api-key" placeholder="sk-ant-..." autocomplete="off">
-      <button class="save-key-btn" onclick="saveKey()">Save key</button>
+      <button class="save-key-btn" id="save-key-btn">Save key</button>
     </div>
     <div class="key-status">
       <div class="key-dot" id="key-dot"></div>
@@ -442,43 +576,43 @@
 
   <!-- Step 1: LLM -->
   <p class="section-label">01 — Choose your target LLM</p>
-  <div class="llm-grid">
-    <button class="llm-btn" data-llm="Claude (Anthropic)" style="--llm-color:#a78bfa" onclick="selectLLM(this)">
+  <div class="llm-grid" id="llm-grid">
+    <button class="llm-btn" data-llm="Claude (Anthropic)" style="--llm-color:#a78bfa">
       <div class="llm-dot"></div>
       <span class="llm-name">Claude</span>
       <span class="llm-maker">Anthropic</span>
     </button>
-    <button class="llm-btn" data-llm="ChatGPT / GPT-4o (OpenAI)" style="--llm-color:#4ade80" onclick="selectLLM(this)">
+    <button class="llm-btn" data-llm="ChatGPT / GPT-4o (OpenAI)" style="--llm-color:#4ade80">
       <div class="llm-dot"></div>
       <span class="llm-name">ChatGPT</span>
       <span class="llm-maker">OpenAI</span>
     </button>
-    <button class="llm-btn" data-llm="Gemini (Google DeepMind)" style="--llm-color:#60a5fa" onclick="selectLLM(this)">
+    <button class="llm-btn" data-llm="Gemini (Google DeepMind)" style="--llm-color:#60a5fa">
       <div class="llm-dot"></div>
       <span class="llm-name">Gemini</span>
       <span class="llm-maker">Google</span>
     </button>
-    <button class="llm-btn" data-llm="Microsoft Copilot (GPT-4 based)" style="--llm-color:#fb923c" onclick="selectLLM(this)">
+    <button class="llm-btn" data-llm="Microsoft Copilot (GPT-4 based)" style="--llm-color:#fb923c">
       <div class="llm-dot"></div>
       <span class="llm-name">Copilot</span>
       <span class="llm-maker">Microsoft</span>
     </button>
-    <button class="llm-btn" data-llm="Mistral (Mistral AI)" style="--llm-color:#f472b6" onclick="selectLLM(this)">
+    <button class="llm-btn" data-llm="Mistral (Mistral AI)" style="--llm-color:#f472b6">
       <div class="llm-dot"></div>
       <span class="llm-name">Mistral</span>
       <span class="llm-maker">Mistral AI</span>
     </button>
-    <button class="llm-btn" data-llm="Llama (Meta, open source)" style="--llm-color:#facc15" onclick="selectLLM(this)">
+    <button class="llm-btn" data-llm="Llama (Meta, open source)" style="--llm-color:#facc15">
       <div class="llm-dot"></div>
       <span class="llm-name">Llama</span>
       <span class="llm-maker">Meta</span>
     </button>
-    <button class="llm-btn" data-llm="DeepSeek (DeepSeek AI)" style="--llm-color:#38bdf8" onclick="selectLLM(this)">
+    <button class="llm-btn" data-llm="DeepSeek (DeepSeek AI)" style="--llm-color:#38bdf8">
       <div class="llm-dot"></div>
       <span class="llm-name">DeepSeek</span>
       <span class="llm-maker">DeepSeek AI</span>
     </button>
-    <button class="llm-btn" data-llm="Grok (xAI)" style="--llm-color:#f87171" onclick="selectLLM(this)">
+    <button class="llm-btn" data-llm="Grok (xAI)" style="--llm-color:#f87171">
       <div class="llm-dot"></div>
       <span class="llm-name">Grok</span>
       <span class="llm-maker">xAI</span>
@@ -491,21 +625,21 @@
     <textarea id="task-input" placeholder="e.g. I need to summarize long legal contracts and extract the key obligations, deadlines, and penalty clauses into a structured format..."></textarea>
     <div class="options-row">
       <span class="section-label" style="margin:0;align-self:center">Output style:</span>
-      <button class="opt-chip active" onclick="toggleChip(this,'style')" data-val="detailed and thorough">Detailed</button>
-      <button class="opt-chip" onclick="toggleChip(this,'style')" data-val="concise and brief">Concise</button>
-      <button class="opt-chip" onclick="toggleChip(this,'style')" data-val="step-by-step structured">Step-by-step</button>
-      <button class="opt-chip" onclick="toggleChip(this,'style')" data-val="creative and exploratory">Creative</button>
+      <button class="opt-chip active" data-group="style" data-val="detailed and thorough">Detailed</button>
+      <button class="opt-chip" data-group="style" data-val="concise and brief">Concise</button>
+      <button class="opt-chip" data-group="style" data-val="step-by-step structured">Step-by-step</button>
+      <button class="opt-chip" data-group="style" data-val="creative and exploratory">Creative</button>
     </div>
     <div class="options-row" style="margin-top:10px">
       <span class="section-label" style="margin:0;align-self:center">Include:</span>
-      <button class="opt-chip active" onclick="toggleChip(this,'include')" data-val="examples">Examples</button>
-      <button class="opt-chip active" onclick="toggleChip(this,'include')" data-val="reasoning steps">Reasoning</button>
-      <button class="opt-chip" onclick="toggleChip(this,'include')" data-val="role/persona">Role persona</button>
-      <button class="opt-chip" onclick="toggleChip(this,'include')" data-val="format constraints">Format rules</button>
+      <button class="opt-chip active" data-group="include" data-val="examples">Examples</button>
+      <button class="opt-chip active" data-group="include" data-val="reasoning steps">Reasoning</button>
+      <button class="opt-chip" data-group="include" data-val="role/persona">Role persona</button>
+      <button class="opt-chip" data-group="include" data-val="format constraints">Format rules</button>
     </div>
   </div>
 
-  <button class="gen-btn" id="gen-btn" onclick="generate()">
+  <button class="gen-btn" id="gen-btn">
     <span id="btn-text">Generate prompt</span>
   </button>
 
@@ -517,42 +651,64 @@
     <div class="output-header">
       <span class="output-label">Generated prompt</span>
       <div style="display:flex;gap:8px">
-        <button class="copy-btn" onclick="copyPrompt()">Copy</button>
-        <button class="copy-btn" onclick="downloadPrompt()">Download</button>
+        <button class="action-btn" id="copy-btn">Copy</button>
+        <button class="action-btn" id="download-btn">Download</button>
       </div>
     </div>
     <div id="prompt-output"></div>
     <div class="token-counter">
       <span class="token-info" id="token-count"></span>
     </div>
-    <div id="explanation-output"></div>
+    <div class="explanation-box" id="explanation-output"></div>
+
+    <!-- Agent refinement chat -->
+    <div class="agent-chat" id="agent-chat">
+      <div class="chat-header">
+        <div class="chat-header-dot"></div>
+        <span class="chat-header-text">Agent — Refine your prompt</span>
+        <span class="chat-turn-count" id="turn-count"></span>
+      </div>
+      <div class="refine-chips" id="refine-chips">
+        <button class="refine-chip" data-msg="Make it more concise">Shorter</button>
+        <button class="refine-chip" data-msg="Make it more detailed with more depth">More detail</button>
+        <button class="refine-chip" data-msg="Add concrete examples">Add examples</button>
+        <button class="refine-chip" data-msg="Make the tone more professional">Professional tone</button>
+        <button class="refine-chip" data-msg="Add explicit output format constraints">Add format rules</button>
+        <button class="refine-chip" data-msg="Simplify the language">Simplify</button>
+      </div>
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-input-row">
+        <input type="text" class="chat-input" id="chat-input" placeholder="Tell the agent how to refine the prompt...">
+        <button class="chat-send-btn" id="chat-send-btn">Refine</button>
+      </div>
+    </div>
   </div>
 
   <!-- Example tasks -->
   <div class="tips">
     <p class="section-label">Try an example task</p>
-    <div class="tip-grid">
-      <div class="tip-card" onclick="fillExample('Analyze customer reviews and identify the top 5 recurring complaints, their sentiment intensity, and suggested product improvements.')">
+    <div class="tip-grid" id="tip-grid">
+      <div class="tip-card" data-example="Analyze customer reviews and identify the top 5 recurring complaints, their sentiment intensity, and suggested product improvements.">
         <p class="tip-title">Review analysis</p>
         <p class="tip-text">Extract complaints and improvements from customer feedback</p>
       </div>
-      <div class="tip-card" onclick="fillExample('Write a cold outreach email to a VP of Engineering at a Series B startup to pitch our developer tooling product.')">
+      <div class="tip-card" data-example="Write a cold outreach email to a VP of Engineering at a Series B startup to pitch our developer tooling product.">
         <p class="tip-title">Sales outreach</p>
         <p class="tip-text">Cold email for developer tooling sales</p>
       </div>
-      <div class="tip-card" onclick="fillExample('Debug this Python function that processes a pandas dataframe — it throws a KeyError intermittently and I cannot reproduce it consistently.')">
+      <div class="tip-card" data-example="Debug this Python function that processes a pandas dataframe — it throws a KeyError intermittently and I cannot reproduce it consistently.">
         <p class="tip-title">Code debugging</p>
         <p class="tip-text">Help debugging an intermittent Python error</p>
       </div>
-      <div class="tip-card" onclick="fillExample('Generate 10 creative marketing campaign concepts for a sustainable sneaker brand targeting Gen Z consumers.')">
+      <div class="tip-card" data-example="Generate 10 creative marketing campaign concepts for a sustainable sneaker brand targeting Gen Z consumers.">
         <p class="tip-title">Creative brainstorm</p>
         <p class="tip-text">Marketing ideas for a sustainable brand</p>
       </div>
-      <div class="tip-card" onclick="fillExample('Translate this dense academic paper abstract into plain English that a non-expert could understand in under 60 seconds.')">
+      <div class="tip-card" data-example="Translate this dense academic paper abstract into plain English that a non-expert could understand in under 60 seconds.">
         <p class="tip-title">Simplification</p>
         <p class="tip-text">Make academic writing accessible</p>
       </div>
-      <div class="tip-card" onclick="fillExample('Design a 12-week workout plan for someone who has 45 minutes three times a week and wants to build strength without a gym.')">
+      <div class="tip-card" data-example="Design a 12-week workout plan for someone who has 45 minutes three times a week and wants to build strength without a gym.">
         <p class="tip-title">Structured planning</p>
         <p class="tip-text">Personalized fitness plan creation</p>
       </div>
@@ -563,214 +719,549 @@
   <div class="history-section" id="history-section" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <p class="section-label" style="margin:0">Prompt history</p>
-      <button class="clear-history-btn" onclick="clearHistory()">Clear all</button>
+      <button class="clear-history-btn" id="clear-history-btn">Clear all</button>
     </div>
     <div id="history-list"></div>
   </div>
 </div>
 
 <script>
+(function() {
+  'use strict';
+
+  // ===== STATE =====
   let selectedLLM = null;
   let selectedStyle = 'detailed and thorough';
-  let selectedIncludes = new Set(['examples', 'reasoning steps']);
+  const selectedIncludes = new Set(['examples', 'reasoning steps']);
   let apiKey = '';
   let currentAbort = null;
+  let currentPrompt = '';
+  let conversationHistory = []; // Full message history for agent refinement
+  let refineTurns = 0;
 
-  // Load saved key on startup
-  (function init() {
-    const saved = localStorage.getItem('pa_api_key');
-    if (saved) {
-      apiKey = saved;
-      document.getElementById('api-key').value = saved;
-      document.getElementById('key-dot').classList.add('connected');
-      document.getElementById('key-status-text').textContent = 'API key saved locally';
-    }
-    renderHistory();
+  // ===== SAFE STORAGE =====
+  const store = (() => {
+    const mem = {};
+    let usable = false;
+    try { localStorage.setItem('_t', '1'); localStorage.removeItem('_t'); usable = true; } catch {}
+    return {
+      get(k) { return usable ? localStorage.getItem(k) : (mem[k] ?? null); },
+      set(k, v) { usable ? localStorage.setItem(k, v) : (mem[k] = v); },
+      remove(k) { usable ? localStorage.removeItem(k) : delete mem[k]; }
+    };
   })();
 
-  function saveKey() {
-    const val = document.getElementById('api-key').value.trim();
-    if (!val) return;
-    apiKey = val;
-    localStorage.setItem('pa_api_key', val);
-    document.getElementById('key-dot').classList.add('connected');
-    document.getElementById('key-status-text').textContent = 'API key saved locally';
+  // ===== DOM REFS =====
+  const $ = id => document.getElementById(id);
+  const apiKeyInput = $('api-key');
+  const keyDot = $('key-dot');
+  const keyStatusText = $('key-status-text');
+  const genBtn = $('gen-btn');
+  const taskInput = $('task-input');
+  const errorBox = $('error-box');
+  const outputSection = $('output-section');
+  const promptOutput = $('prompt-output');
+  const explanationOutput = $('explanation-output');
+  const tokenCount = $('token-count');
+  const agentChat = $('agent-chat');
+  const chatMessages = $('chat-messages');
+  const chatInput = $('chat-input');
+  const chatSendBtn = $('chat-send-btn');
+  const turnCountEl = $('turn-count');
+
+  // ===== SYSTEM PROMPT =====
+  const BASE_SYSTEM_PROMPT = `You are Prompt Architect, an expert AI agent specialized in crafting optimal prompts for different LLMs. You have deep, research-backed knowledge of how each model processes instructions and what patterns produce the best results.
+
+Rules you always follow:
+1. Write the ACTUAL prompt the user should paste into the target LLM — never meta-instructions about prompting
+2. Tailor the prompt's structure, formatting, tone, and strategy specifically to the target LLM using the detailed profile provided below
+3. Actively exploit the target LLM's strengths and compensate for its weaknesses in how you design the prompt
+4. Include requested elements naturally woven in — not bolted on
+5. Make prompts ready to use immediately — only use placeholders where the user must fill in their own content
+6. When refining, preserve what works and surgically improve what the user asks to change
+7. Use the target LLM's preferred formatting style (XML tags for Claude, markdown headers for ChatGPT, explicit delimiters for Llama, etc.)
+8. Consider the target LLM's context window and output limits when sizing the prompt
+9. Apply the recommended temperature/sampling guidance in your explanation
+10. Reference the example prompt patterns from the profile as structural templates
+
+When generating or refining, output ONLY the prompt text. Do not wrap it in code blocks or add preamble.
+
+After the prompt, add exactly "---EXPLANATION---" followed by 2-4 sentences explaining your design choices, referencing specific profile traits that informed your decisions. Also recommend temperature settings and note any special features the user should enable.`;
+
+  // ===== LLM KNOWLEDGE BASE =====
+  const LLM_PROFILES = {
+"Claude (Anthropic)": `Model: Claude 4/3.5 | Context: 200K tokens | Output: ~8K (64K with thinking)
+FORMATTING: Use XML tags (<task>, <context>, <instructions>, <output_format>) — Claude's training specifically optimizes for XML-tagged sections as semantic boundaries. Markdown ## headers work but XML is stronger.
+SYSTEM PROMPT: Dedicated system prompt field treated as highest-priority. Use for persona, constraints, output format. User messages for task content.
+STRENGTHS: Exceptional long-form reasoning, strong instruction adherence with minimal hallucination, handles 200K context natively, excellent code gen/debug/refactor, native extended thinking for complex multi-step reasoning, strong structured extraction.
+WEAKNESSES: Can be overly cautious/hedging, sometimes over-explains, may refuse borderline-but-legitimate tasks.
+STRATEGIES: Use XML tags to separate context from instructions. Provide WHY context — Claude performs better understanding purpose. Ask for thinking/reasoning before final answer for complex tasks. Use 'Be direct and concise' to counter over-explaining. Prefill assistant response to guide format (start with '{' for JSON). Use negative constraints sparingly — positive instructions work better.
+EXAMPLE PATTERN: <document>{content}</document>\\n<task>Extract these fields:</task>\\n<output_format>JSON with: {fields}</output_format>
+TEMPERATURE: 0.0-0.3 factual/extraction, 0.7-1.0 creative. Default 1.0 is well-calibrated.
+SPECIAL: Extended thinking mode, tool use for multi-step workflows, vision, citations from long docs.`,
+
+"ChatGPT / GPT-4o (OpenAI)": `Model: GPT-4o/4.1 | Context: 128K tokens | Output: ~16K (4K default, must request more)
+FORMATTING: Markdown headers (##) + role assignment ("You are a..."). GPT is heavily RLHF-trained on markdown conversations. Role assignment activates specialized behavior.
+SYSTEM PROMPT: Strongly adheres to system prompts. Use "You are..." for role. System prompt persists across turns. Put guardrails and output format here.
+STRENGTHS: Excellent instruction-following (very literal/obedient), strong role-playing/persona, native JSON mode, good creative writing with style constraints, reliable function calling, multi-turn natural conversation.
+WEAKNESSES: Can be sycophantic (agrees rather than pushes back), may hallucinate citations/URLs/facts, verbose by default, lost-in-the-middle problem with long context.
+STRATEGIES: Start with clear role: "You are an expert {domain} specialist with {N} years experience". Numbered steps for procedures — GPT follows almost literally. Specify format: "Respond in JSON", "Use markdown table". Use "Do NOT..." for failure mode prevention. "If you're not sure, say so" for factual tasks. Few-shot examples — GPT pattern-matches very effectively.
+EXAMPLE PATTERN: ## Role\\nYou are a {role}.\\n\\n## Task\\n{description}\\n\\n## Requirements\\n1. {req1}\\n2. {req2}\\n\\n## Output Format\\n{spec}
+TEMPERATURE: 0.0 deterministic, 0.7 balanced, 1.0+ creative. Consider top_p for creative tasks.
+SPECIAL: JSON mode (response_format: json_object), function calling with JSON schema, vision, Code Interpreter for data analysis, DALL-E inline image gen.`,
+
+"Gemini (Google DeepMind)": `Model: Gemini 2.5 Pro/Flash | Context: 1M tokens (2M for 2.5 Pro) | Output: ~8K (65K thinking mode)
+FORMATTING: Clear section headers + explicit output schema + grounding cues. Trained on structured web data/documentation — explicit structure maps to training distribution. Both markdown headers and labeled sections work.
+SYSTEM PROMPT: Uses "system instructions" that persist across turns. Supports very long system instructions given the context window.
+STRENGTHS: Massive context (entire codebases, books, video), strong multimodal (text/image/video/audio natively), excellent factual grounding, native Google Search grounding, strong multilingual, structured reasoning, thinking mode with budgets.
+WEAKNESSES: Can be overly verbose, sometimes unnecessary caveats, may not follow exact formatting as precisely as GPT-4o, can give surface-level analysis when depth needed.
+STRATEGIES: Leverage massive context — paste entire documents/codebases directly. Explicit output format: "Output as JSON with these exact keys:...". Enable Search grounding for factual tasks. Break complex tasks into numbered sub-tasks. For multimodal: describe what aspect to focus on. "Be thorough but concise" to counter verbosity. Specify audience level.
+EXAMPLE PATTERN: Analyze the following content.\\n\\nContent:\\n{content}\\n\\nProvide analysis as:\\n1. Summary (2-3 sentences)\\n2. Key findings (bullets)\\n3. Issues (bullets)\\n4. Recommendations (numbered)
+TEMPERATURE: 0.0-0.2 extraction/factual, 0.4-0.7 analysis, 0.8-1.0 creative. Supports top_k.
+SPECIAL: 1M+ context for entire repos/books, Search grounding for real-time info, multimodal (image/video/audio), code execution, structured output with schema enforcement, thinking mode.`,
+
+"Microsoft Copilot (GPT-4 based)": `Model: GPT-4 Turbo/4o (Microsoft-hosted) | Context: 128K tokens | Output: ~4K (shorter in practice)
+FORMATTING: Professional framing + clear task scope + expected deliverable. Optimized for business/productivity — professional framing activates strongest behavior. Think "workplace assistant".
+SYSTEM PROMPT: Limited in consumer Copilot — use strong first-message framing. Enterprise allows custom system prompts.
+STRENGTHS: Deep Microsoft 365 integration, real-time web search by default, good at productivity tasks (emails/reports/presentations), strong document summarization, handles business communication well.
+WEAKNESSES: More constrained than raw GPT-4o (Microsoft safety layer), shorter outputs, no code execution, unwanted disclaimers/citations, web search can dominate when not needed, less flexible for creative/unconventional tasks.
+STRATEGIES: Frame as professional task: "Act as a professional {role} preparing a {deliverable}". Be explicit about deliverable: "Write a 500-word report". Specify audience: "for a C-level executive". "Based on current information" for web-sourced answers. "Using only your training knowledge" to avoid web search. Single focused tasks — chained tasks work less well. Professional tone indicators: "formal", "executive summary", "briefing note".
+EXAMPLE PATTERN: Act as a professional {role}.\\n\\nTask: {task}\\nDeliverable: {what}\\nAudience: {who}\\nTone: {formal/informal}\\nLength: {words}
+TEMPERATURE: Not controllable in consumer. Influence via prompt: "be creative" vs "be precise".
+SPECIAL: Web search (always on), M365 integration (enterprise), image gen via DALL-E, Notebook mode for longer responses.`,
+
+"Mistral (Mistral AI)": `Model: Mistral Large/Medium/Small | Context: 128K tokens | Output: ~8K
+FORMATTING: Direct, explicit instructions with clear format specs. Responds best to unambiguous instructions — doesn't infer implicit requirements as well as larger models. Keep structure flat, not deeply nested.
+SYSTEM PROMPT: Supports system prompts via API. Keep focused — overly long system prompts degrade performance.
+STRENGTHS: Excellent multilingual (especially European languages), strong code gen, good instruction-following with less safety over-refusal, efficient/fast, strong structured output and JSON, reliable function calling, concise direct responses.
+WEAKNESSES: Less strong at nuanced reasoning vs Claude/GPT-4o, smaller knowledge footprint, can be too terse, less reliable at long multi-step reasoning, weaker creative writing, struggles with ambiguous/underspecified instructions.
+STRATEGIES: Be explicit about everything — Mistral infers less from context. Specify output format precisely: "Output exactly as JSON with keys:...". Explicitly request step-by-step for reasoning. One thing at a time — sequential over complex multi-part. Few-shot examples for non-obvious formats. State constraints and edge cases directly. For multilingual: specify input/output languages explicitly.
+EXAMPLE PATTERN: Task: {description}\\n\\nInput: {input}\\n\\nInstructions:\\n1. {step1}\\n2. {step2}\\n\\nOutput format: {spec}\\n\\nConstraints:\\n- {c1}\\n- {c2}
+TEMPERATURE: 0.0-0.1 deterministic (code/extraction), 0.3-0.5 analysis, 0.7-1.0 creative. More sensitive to temperature than larger models.
+SPECIAL: JSON mode, reliable function calling, particularly strong in French/German/Spanish/Italian, Le Chat with search/canvas.`,
+
+"Llama (Meta, open source)": `Model: Llama 4/3.3 | Context: 128K (Llama 3.3), 10M (Llama 4 Scout) | Output: 4K-8K (varies by host)
+FORMATTING: Explicit format templates with clear delimiters + few-shot examples. Less implicit format understanding — SHOW don't tell. Use labeled sections: "INPUT:", "INSTRUCTIONS:", "OUTPUT:". Avoid complex nesting.
+SYSTEM PROMPT: Uses [INST]/<<SYS>> (Llama 2) or <|begin_of_text|> (Llama 3+). Varies by hosting provider. Keep short and directive.
+STRENGTHS: Open source (customizable, fine-tunable, self-hostable), strong code gen, good at following structured prompts, no inherent content restrictions, competitive with proprietary models, multiple sizes, large fine-tuned ecosystem.
+WEAKNESSES: Less reliable at implicit instruction following, weaker nuanced reasoning, prone to repetition in longer outputs, less world knowledge, quality varies by hosting/quantization, weaker at self-correction, chat-tuned versions can be too conversational.
+STRATEGIES: Be hyper-explicit — state everything, assume nothing inferred. Provide at least one few-shot example of exact format wanted. Use clear delimiters: "INPUT:", "TASK:", "FORMAT:", "OUTPUT:". Provide worked examples for reasoning. Keep steps simple and atomic. Specify what NOT to include. Add mid-prompt reminders for long outputs. Repeat critical constraints at end. Use temperature 0.1-0.3 for precision.
+EXAMPLE PATTERN: TASK: {description}\\n\\nFORMAT: {format}\\n\\nEXAMPLE:\\nInput: {ex_in}\\nOutput: {ex_out}\\n\\nNOW YOUR TURN:\\nInput: {actual}\\nOutput:
+TEMPERATURE: 0.1-0.3 factual/code, 0.5-0.7 analysis, 0.8-1.0 creative. More sensitive than proprietary — small changes have outsized effects.
+SPECIAL: Fine-tuning (LoRA/full), self-hosting for privacy, quantization (4/8-bit/full), tool calling (3.1+), multimodal (Llama 4), 10M context (Llama 4 Scout).`,
+
+"DeepSeek (DeepSeek AI)": `Model: DeepSeek-V3/R1 | Context: 128K tokens | Output: ~8K (longer with R1 reasoning)
+FORMATTING: Clear problem statement + explicit reasoning framework + output spec. Excels with systematic thinking — structure prompts as problems to solve. Labeled sections: "Problem:", "Approach:", "Constraints:", "Output:".
+SYSTEM PROMPT: Supports system prompts via API. Keep focused on task domain. For R1, system prompts can guide reasoning process.
+STRENGTHS: Exceptional code gen (rivals GPT-4o/Claude), strong math/logical reasoning (R1), native chain-of-thought reasoning showing thinking process, competitive price-performance, strong algorithm design/optimization, good structured data processing.
+WEAKNESSES: Weaker creative writing and nuanced prose, less broad general knowledge, English can be inconsistent (awkward phrasing), R1 thinking can be excessive for simple tasks, less reliable complex formatting, weaker cultural context/idiom, can be overly literal.
+STRATEGIES: Frame as problems to solve, not content to generate. For R1: "think through step by step" activates deep reasoning. Provide test cases for code tasks. Use chain-of-thought frameworks: "First analyze, then plan, then implement". Include input/output examples for data tasks. State problems formally for math/logic. Keep creative requirements minimal — focus on technical precision. Break complex problems into sub-problems.
+EXAMPLE PATTERN: Problem: {description}\\n\\nLanguage: {lang}\\nInput: {spec}\\nOutput: {spec}\\n\\nConstraints:\\n- {c1}\\n- Time: {time_req}\\n\\nTest cases:\\nInput: {t1} -> Expected: {t1_out}\\n\\nSolve with reasoning, then final code.
+TEMPERATURE: 0.0 for code/math (deterministic), 0.3-0.5 analysis. Avoid >0.7 — creative quality drops significantly.
+SPECIAL: R1 chain-of-thought reasoning, fill-in-the-middle for code completion, multi-file code handling, mathematical proofs, function calling.`,
+
+"Grok (xAI)": `Model: Grok 3/3 Mini | Context: 128K tokens | Output: ~8K
+FORMATTING: Direct task statement + explicit constraints + format spec. Works best with no-nonsense prompts — skip lengthy preambles. Clear boundaries prevent excessive casualness.
+SYSTEM PROMPT: Supports via API. Use for tone control — Grok defaults to casual/witty so specify "professional tone" if needed. Keep concise.
+STRENGTHS: Direct unfiltered communication (less hedging), strong technical/scientific topics, real-time X/Twitter data, good at contrarian/unconventional perspectives, humor when appropriate, concise actionable responses, DeepSearch for research, Think mode for reasoning.
+WEAKNESSES: Smaller training corpus, can be too informal, less reliable long structured outputs, fewer safety guardrails, weaker multi-perspective analysis, less ecosystem integration, limited API access.
+STRATEGIES: Be direct — skip preamble, state task immediately. Set explicit tone: "Respond professionally" or "Be direct and technical". Clear boundaries: "Do X. Do not do Y." For factual: "Only verified information. No speculation." Leverage directness for tasks where bluntness helps (code review, feedback). "DeepSearch" framing for research. Keep prompts concise — tight instructions get better results. Leverage X/Twitter data for current events.
+EXAMPLE PATTERN: Task: {task}\\n\\nConstraints:\\n- {c1}\\n- {c2}\\n\\nOutput: {format}\\n\\nDo not include explanations or caveats.
+TEMPERATURE: 0.0-0.2 technical precision, 0.5-0.7 analysis, higher for creative/humor.
+SPECIAL: DeepSearch for thorough research, Think mode for reasoning, real-time X/Twitter data, image gen (Aurora), image understanding, less filtered content.`
+  };
+
+  function buildSystemPrompt(targetLLM) {
+    const profile = LLM_PROFILES[targetLLM];
+    if (!profile) return BASE_SYSTEM_PROMPT;
+    return `${BASE_SYSTEM_PROMPT}\n\n=== DETAILED PROFILE: ${targetLLM} ===\n${profile}`;
   }
 
-  function selectLLM(btn) {
-    document.querySelectorAll('.llm-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-    selectedLLM = btn.dataset.llm;
-  }
-
-  function toggleChip(chip, group) {
-    if (group === 'style') {
-      document.querySelectorAll(`[onclick*="'style'"]`).forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      selectedStyle = chip.dataset.val;
-    } else {
-      chip.classList.toggle('active');
-      if (chip.classList.contains('active')) selectedIncludes.add(chip.dataset.val);
-      else selectedIncludes.delete(chip.dataset.val);
+  // ===== INIT =====
+  function init() {
+    const saved = store.get('pa_api_key');
+    if (saved) {
+      apiKey = saved;
+      apiKeyInput.value = saved;
+      setKeyConnected(true);
     }
+    renderHistory();
+    bindEvents();
   }
 
-  function fillExample(text) {
-    document.getElementById('task-input').value = text;
-    document.getElementById('task-input').focus();
+  function setKeyConnected(connected) {
+    keyDot.classList.toggle('connected', connected);
+    keyStatusText.textContent = connected ? 'API key saved locally' : 'No API key set';
   }
 
+  // ===== EVENT BINDING =====
+  function bindEvents() {
+    $('save-key-btn').addEventListener('click', saveKey);
+    apiKeyInput.addEventListener('keydown', e => { if (e.key === 'Enter') saveKey(); });
+
+    // LLM selection
+    $('llm-grid').addEventListener('click', e => {
+      const btn = e.target.closest('.llm-btn');
+      if (!btn) return;
+      document.querySelectorAll('.llm-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedLLM = btn.dataset.llm;
+    });
+
+    // Option chips
+    document.querySelectorAll('.opt-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const group = chip.dataset.group;
+        if (group === 'style') {
+          document.querySelectorAll('[data-group="style"]').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          selectedStyle = chip.dataset.val;
+        } else {
+          chip.classList.toggle('active');
+          if (chip.classList.contains('active')) selectedIncludes.add(chip.dataset.val);
+          else selectedIncludes.delete(chip.dataset.val);
+        }
+      });
+    });
+
+    // Generate
+    genBtn.addEventListener('click', generate);
+
+    // Copy & Download
+    $('copy-btn').addEventListener('click', copyPrompt);
+    $('download-btn').addEventListener('click', downloadPrompt);
+
+    // Example tasks
+    $('tip-grid').addEventListener('click', e => {
+      const card = e.target.closest('.tip-card');
+      if (!card) return;
+      taskInput.value = card.dataset.example;
+      taskInput.focus();
+    });
+
+    // Refine chips
+    $('refine-chips').addEventListener('click', e => {
+      const chip = e.target.closest('.refine-chip');
+      if (!chip) return;
+      chatInput.value = chip.dataset.msg;
+      sendRefinement();
+    });
+
+    // Chat send
+    chatSendBtn.addEventListener('click', sendRefinement);
+    chatInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendRefinement(); }
+    });
+
+    // History
+    $('history-list').addEventListener('click', e => {
+      const del = e.target.closest('.history-delete');
+      if (del) { e.stopPropagation(); deleteHistory(Number(del.dataset.id)); return; }
+      const item = e.target.closest('.history-item');
+      if (item) loadHistory(Number(item.dataset.id));
+    });
+    $('clear-history-btn').addEventListener('click', clearHistory);
+
+    // Keyboard shortcut
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        if (agentChat.classList.contains('visible') && chatInput === document.activeElement) {
+          sendRefinement();
+        } else {
+          generate();
+        }
+      }
+    });
+  }
+
+  // ===== API KEY =====
+  function saveKey() {
+    const val = apiKeyInput.value.trim();
+    if (!val) return;
+    if (!val.startsWith('sk-')) {
+      showError('API key should start with "sk-". Please check your key.');
+      return;
+    }
+    apiKey = val;
+    store.set('pa_api_key', val);
+    setKeyConnected(true);
+    hideError();
+  }
+
+  function getApiKey() {
+    // Always read from input field as well — user might not have clicked Save
+    const inputVal = apiKeyInput.value.trim();
+    if (inputVal && inputVal !== apiKey) {
+      apiKey = inputVal;
+      store.set('pa_api_key', inputVal);
+      setKeyConnected(true);
+    }
+    return apiKey;
+  }
+
+  // ===== API CALL (STREAMING) =====
+  async function callAPI(messages, signal) {
+    const key = getApiKey();
+    if (!key) throw new Error('Please enter your Anthropic API key.');
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4096,
+        system: buildSystemPrompt(selectedLLM),
+        stream: true,
+        messages
+      }),
+      signal
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      const msg = errData.error?.message || `API error ${res.status}`;
+      if (res.status === 401) throw new Error('Invalid API key. Please check and re-enter it.');
+      if (res.status === 429) throw new Error('Rate limited. Please wait a moment and try again.');
+      throw new Error(msg);
+    }
+
+    return res;
+  }
+
+  async function streamResponse(res, onChunk) {
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+    let buffer = '';
+    let outputTokens = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+        try {
+          const evt = JSON.parse(data);
+          if (evt.type === 'content_block_delta' && evt.delta?.text) {
+            fullText += evt.delta.text;
+            onChunk(fullText);
+          }
+          if (evt.type === 'message_delta' && evt.usage) {
+            outputTokens = evt.usage.output_tokens;
+          }
+        } catch {}
+      }
+    }
+
+    return { fullText, outputTokens };
+  }
+
+  // ===== GENERATE =====
   async function generate() {
-    const task = document.getElementById('task-input').value.trim();
+    const task = taskInput.value.trim();
     if (!task) { showError('Please describe your task first.'); return; }
     if (!selectedLLM) { showError('Please select a target LLM.'); return; }
-    if (!apiKey) { showError('Please enter your Anthropic API key above.'); return; }
+    if (!getApiKey()) { showError('Please enter your Anthropic API key above.'); return; }
 
     hideError();
     setLoading(true);
 
-    // Abort any previous in-flight request
     if (currentAbort) currentAbort.abort();
     currentAbort = new AbortController();
 
     const includes = Array.from(selectedIncludes).join(', ') || 'none';
 
-    const metaPrompt = `You are an expert prompt engineer who deeply understands how different LLMs process instructions and what patterns make them respond best.
+    const userMessage = `Generate an optimal prompt for ${selectedLLM}.
 
-The user wants to accomplish this task:
-<task>
-${task}
-</task>
-
-Target LLM: ${selectedLLM}
+Task: ${task}
 Desired output style: ${selectedStyle}
 Elements to include: ${includes}
 
-Your job: Write the OPTIMAL prompt for ${selectedLLM} specifically, exploiting that model's known strengths and quirks. Follow these rules:
-
-1. Write the ACTUAL prompt the user should paste into ${selectedLLM} — not instructions about how to write a prompt.
-2. Tailor it specifically to ${selectedLLM}'s behavior:
-   - Claude: Use XML tags for structure, direct instruction style, include context about WHY if helpful, leverage its long-form reasoning strength
-   - ChatGPT/GPT-4o: Use clear role assignment ("You are ..."), numbered steps, benefit from its instruction-following; can use markdown headers effectively
-   - Gemini: Use factual grounding cues, leverage its multimodal awareness, explicit format requests, structured output requests work well
-   - Copilot: Lean into productivity/professional framing, clear task scoping, works well with "Act as a professional..." framing
-   - Mistral: Clear, explicit instructions work best; less implicit reasoning needed; structured format requests
-   - Llama: Explicit step-by-step instructions, clear output format specification, less reliant on implicit world knowledge
-   - DeepSeek: Strong at code and reasoning chains; benefits from explicit chain-of-thought prompting, clear reasoning frameworks, and structured output
-   - Grok: Direct, no-nonsense tone; handles technical topics well; benefits from explicit constraints and clear task boundaries
-3. Include the requested elements (${includes}) naturally woven in — not bolted on.
-4. Output style should be: ${selectedStyle}
-5. Make the prompt ready to use immediately — no placeholders except where the user needs to fill in their actual content.
-
-After the prompt, add a section starting with exactly "---EXPLANATION---" then write 2-3 sentences explaining the key choices you made for ${selectedLLM} specifically.
-
 Write the prompt now:`;
 
-    const outputEl = document.getElementById('prompt-output');
-    const explEl = document.getElementById('explanation-output');
-    outputEl.textContent = '';
-    outputEl.classList.add('streaming');
-    explEl.style.display = 'none';
-    document.getElementById('output-section').style.display = 'block';
-    document.getElementById('output-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    document.getElementById('token-count').textContent = '';
+    // Reset conversation and agent state
+    conversationHistory = [{ role: 'user', content: userMessage }];
+    refineTurns = 0;
+    chatMessages.innerHTML = '';
+    agentChat.classList.remove('visible');
+
+    promptOutput.textContent = '';
+    promptOutput.classList.add('streaming');
+    explanationOutput.style.display = 'none';
+    outputSection.style.display = 'block';
+    outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    tokenCount.textContent = '';
 
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 4096,
-          stream: true,
-          messages: [{ role: 'user', content: metaPrompt }]
-        }),
-        signal: currentAbort.signal
+      const res = await callAPI(conversationHistory, currentAbort.signal);
+
+      const { fullText, outputTokens } = await streamResponse(res, text => {
+        const splitIdx = text.indexOf('---EXPLANATION---');
+        promptOutput.textContent = splitIdx === -1 ? text : text.slice(0, splitIdx).trim();
       });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error?.message || `API error ${res.status}`);
-      }
+      promptOutput.classList.remove('streaming');
 
-      // SSE streaming
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let fullText = '';
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          const data = line.slice(6).trim();
-          if (data === '[DONE]') continue;
-
-          try {
-            const evt = JSON.parse(data);
-            if (evt.type === 'content_block_delta' && evt.delta?.text) {
-              fullText += evt.delta.text;
-
-              // Split live: show prompt part, hold explanation
-              const splitIdx = fullText.indexOf('---EXPLANATION---');
-              if (splitIdx === -1) {
-                outputEl.textContent = fullText;
-              } else {
-                outputEl.textContent = fullText.slice(0, splitIdx).trim();
-              }
-            }
-            if (evt.type === 'message_delta' && evt.usage) {
-              document.getElementById('token-count').textContent =
-                `${evt.usage.output_tokens} tokens generated`;
-            }
-          } catch {}
-        }
-      }
-
-      outputEl.classList.remove('streaming');
-
-      // Final split
+      // Parse result
       const parts = fullText.split('---EXPLANATION---');
-      const promptText = parts[0].trim();
+      currentPrompt = parts[0].trim();
       const explanation = parts[1] ? parts[1].trim() : null;
 
-      outputEl.textContent = promptText;
+      promptOutput.textContent = currentPrompt;
 
       if (explanation) {
-        explEl.innerHTML = `<strong>Why this works for ${escapeHTML(selectedLLM)}:</strong> ${escapeHTML(explanation)}`;
-        explEl.style.display = 'block';
+        explanationOutput.innerHTML = `<strong>Why this works for ${escapeHTML(selectedLLM)}:</strong> ${escapeHTML(explanation)}`;
+        explanationOutput.style.display = 'block';
       }
 
-      // Rough word-based token estimate
-      const wordCount = promptText.split(/\s+/).length;
-      const tokenEst = Math.round(wordCount * 1.3);
-      document.getElementById('token-count').textContent =
-        `~${tokenEst} tokens | ${wordCount} words`;
+      // Stats
+      const wordCount = currentPrompt.split(/\s+/).length;
+      const tokenEst = outputTokens || Math.round(wordCount * 1.3);
+      tokenCount.textContent = outputTokens
+        ? `${outputTokens} tokens | ${wordCount} words`
+        : `~${tokenEst} tokens | ${wordCount} words`;
+
+      // Store assistant reply in history
+      conversationHistory.push({ role: 'assistant', content: fullText });
+
+      // Show agent chat for refinement
+      agentChat.classList.add('visible');
+      updateTurnCount();
 
       // Save to history
-      saveToHistory(selectedLLM, task, promptText, explanation);
+      saveToHistory(selectedLLM, task, currentPrompt, explanation);
 
     } catch (err) {
-      outputEl.classList.remove('streaming');
-      if (err.name !== 'AbortError') {
-        showError('Error: ' + err.message);
-      }
+      promptOutput.classList.remove('streaming');
+      if (err.name !== 'AbortError') showError('Error: ' + err.message);
     } finally {
       setLoading(false);
     }
   }
 
+  // ===== AGENT REFINEMENT =====
+  async function sendRefinement() {
+    const msg = chatInput.value.trim();
+    if (!msg) return;
+    if (!getApiKey()) { showError('Please enter your Anthropic API key.'); return; }
+
+    chatInput.value = '';
+    hideError();
+
+    // Show user message
+    appendChatMsg('user', msg);
+
+    // Add to conversation
+    conversationHistory.push({
+      role: 'user',
+      content: `The user wants to refine the prompt. Their feedback: "${msg}"
+
+Here is the current prompt you generated:
+<current_prompt>
+${currentPrompt}
+</current_prompt>
+
+Apply the user's feedback and output the complete revised prompt. Output ONLY the prompt text followed by ---EXPLANATION--- and a brief note on what you changed.`
+    });
+
+    // Show thinking
+    const thinkingEl = document.createElement('div');
+    thinkingEl.className = 'chat-thinking';
+    thinkingEl.innerHTML = `<div class="spinner-light"></div><span>Agent is refining...</span>`;
+    chatMessages.appendChild(thinkingEl);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    chatSendBtn.disabled = true;
+
+    if (currentAbort) currentAbort.abort();
+    currentAbort = new AbortController();
+
+    try {
+      const res = await callAPI(conversationHistory, currentAbort.signal);
+
+      promptOutput.classList.add('streaming');
+
+      const { fullText } = await streamResponse(res, text => {
+        const splitIdx = text.indexOf('---EXPLANATION---');
+        promptOutput.textContent = splitIdx === -1 ? text : text.slice(0, splitIdx).trim();
+      });
+
+      promptOutput.classList.remove('streaming');
+
+      // Parse
+      const parts = fullText.split('---EXPLANATION---');
+      currentPrompt = parts[0].trim();
+      const explanation = parts[1] ? parts[1].trim() : null;
+
+      promptOutput.textContent = currentPrompt;
+
+      // Store in conversation
+      conversationHistory.push({ role: 'assistant', content: fullText });
+      refineTurns++;
+      updateTurnCount();
+
+      // Show agent response in chat
+      thinkingEl.remove();
+      const changeNote = explanation || 'Prompt updated based on your feedback.';
+      appendChatMsg('agent', changeNote);
+
+      // Update explanation
+      if (explanation) {
+        explanationOutput.innerHTML = `<strong>Changes made:</strong> ${escapeHTML(explanation)}`;
+        explanationOutput.style.display = 'block';
+      }
+
+      // Update stats
+      const wordCount = currentPrompt.split(/\s+/).length;
+      tokenCount.textContent = `~${Math.round(wordCount * 1.3)} tokens | ${wordCount} words | ${refineTurns} refinement${refineTurns !== 1 ? 's' : ''}`;
+
+      // Update history with latest version
+      updateLatestHistory(currentPrompt, explanation);
+
+    } catch (err) {
+      promptOutput.classList.remove('streaming');
+      thinkingEl.remove();
+      if (err.name !== 'AbortError') {
+        appendChatMsg('agent', 'Error: ' + err.message);
+      }
+    } finally {
+      chatSendBtn.disabled = false;
+      chatInput.focus();
+    }
+  }
+
+  function appendChatMsg(role, text) {
+    const isUser = role === 'user';
+    const div = document.createElement('div');
+    div.className = `chat-msg ${isUser ? 'user-msg' : 'agent-msg'}`;
+    div.innerHTML = `
+      <div class="chat-msg-role ${isUser ? 'user-role' : 'agent-role'}">${isUser ? 'You' : 'Agent'}</div>
+      <div class="chat-msg-body">${escapeHTML(text)}</div>
+    `;
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function updateTurnCount() {
+    turnCountEl.textContent = refineTurns > 0
+      ? `${refineTurns} refinement${refineTurns !== 1 ? 's' : ''}`
+      : 'Ready to refine';
+  }
+
+  // ===== UTILITIES =====
   function escapeHTML(str) {
     const d = document.createElement('div');
     d.textContent = str;
@@ -778,44 +1269,59 @@ Write the prompt now:`;
   }
 
   function setLoading(on) {
-    const btn = document.getElementById('gen-btn');
-    btn.disabled = on;
-    btn.innerHTML = on
+    genBtn.disabled = on;
+    genBtn.innerHTML = on
       ? `<div class="spinner"></div><span>Architecting your prompt...</span>`
-      : `<span id="btn-text">Generate prompt</span>`;
+      : `<span>Generate prompt</span>`;
   }
 
   function showError(msg) {
-    const el = document.getElementById('error-box');
-    el.textContent = msg;
-    el.style.display = 'block';
+    errorBox.textContent = msg;
+    errorBox.style.display = 'block';
   }
+
   function hideError() {
-    document.getElementById('error-box').style.display = 'none';
+    errorBox.style.display = 'none';
   }
 
   async function copyPrompt() {
-    const text = document.getElementById('prompt-output').textContent;
-    await navigator.clipboard.writeText(text);
-    const btns = document.querySelectorAll('.copy-btn');
-    btns[0].textContent = 'Copied!';
-    btns[0].classList.add('copied');
-    setTimeout(() => { btns[0].textContent = 'Copy'; btns[0].classList.remove('copied'); }, 2000);
+    const text = promptOutput.textContent;
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // Fallback for non-HTTPS or sandboxed contexts
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;left:-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    const btn = $('copy-btn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
   }
 
   function downloadPrompt() {
-    const text = document.getElementById('prompt-output').textContent;
+    const text = promptOutput.textContent;
+    if (!text) return;
     const blob = new Blob([text], { type: 'text/plain' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `prompt_${selectedLLM?.replace(/[^a-zA-Z]/g,'_') || 'output'}_${Date.now()}.txt`;
+    const llmSlug = selectedLLM ? selectedLLM.replace(/[^a-zA-Z0-9]/g, '_') : 'output';
+    a.download = `prompt_${llmSlug}_${Date.now()}.txt`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(a.href);
   }
 
-  // History management
+  // ===== HISTORY =====
   function getHistory() {
-    try { return JSON.parse(localStorage.getItem('pa_history') || '[]'); }
+    try { return JSON.parse(store.get('pa_history') || '[]'); }
     catch { return []; }
   }
 
@@ -826,19 +1332,27 @@ Write the prompt now:`;
       llm,
       task: task.slice(0, 120),
       prompt,
-      explanation,
+      explanation: explanation || null,
       time: new Date().toLocaleString()
     });
-    // Keep last 20
     if (history.length > 20) history.length = 20;
-    localStorage.setItem('pa_history', JSON.stringify(history));
+    store.set('pa_history', JSON.stringify(history));
     renderHistory();
+  }
+
+  function updateLatestHistory(prompt, explanation) {
+    const history = getHistory();
+    if (history.length > 0) {
+      history[0].prompt = prompt;
+      if (explanation) history[0].explanation = explanation;
+      store.set('pa_history', JSON.stringify(history));
+    }
   }
 
   function renderHistory() {
     const history = getHistory();
-    const section = document.getElementById('history-section');
-    const list = document.getElementById('history-list');
+    const section = $('history-section');
+    const list = $('history-list');
 
     if (history.length === 0) {
       section.style.display = 'none';
@@ -847,13 +1361,13 @@ Write the prompt now:`;
 
     section.style.display = 'block';
     list.innerHTML = history.map(h => `
-      <div class="history-item" onclick="loadHistory(${h.id})">
+      <div class="history-item" data-id="${h.id}">
         <div class="history-meta">
           <div class="history-llm">${escapeHTML(h.llm)}</div>
           <div class="history-task">${escapeHTML(h.task)}</div>
         </div>
         <span class="history-time">${escapeHTML(h.time)}</span>
-        <button class="history-delete" onclick="event.stopPropagation();deleteHistory(${h.id})">x</button>
+        <button class="history-delete" data-id="${h.id}">x</button>
       </div>
     `).join('');
   }
@@ -862,36 +1376,44 @@ Write the prompt now:`;
     const item = getHistory().find(h => h.id === id);
     if (!item) return;
 
-    document.getElementById('prompt-output').textContent = item.prompt;
-    const explEl = document.getElementById('explanation-output');
+    promptOutput.textContent = item.prompt;
+    currentPrompt = item.prompt;
+
     if (item.explanation) {
-      explEl.innerHTML = `<strong>Why this works for ${escapeHTML(item.llm)}:</strong> ${escapeHTML(item.explanation)}`;
-      explEl.style.display = 'block';
+      explanationOutput.innerHTML = `<strong>Why this works for ${escapeHTML(item.llm)}:</strong> ${escapeHTML(item.explanation)}`;
+      explanationOutput.style.display = 'block';
     } else {
-      explEl.style.display = 'none';
+      explanationOutput.style.display = 'none';
     }
-    document.getElementById('output-section').style.display = 'block';
-    document.getElementById('output-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Reset agent for this prompt
+    conversationHistory = [
+      { role: 'user', content: `Previously generated prompt for ${item.llm}:\n${item.prompt}` },
+      { role: 'assistant', content: item.prompt + (item.explanation ? '\n---EXPLANATION---\n' + item.explanation : '') }
+    ];
+    refineTurns = 0;
+    chatMessages.innerHTML = '';
+    agentChat.classList.add('visible');
+    updateTurnCount();
+
+    outputSection.style.display = 'block';
+    outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function deleteHistory(id) {
     const history = getHistory().filter(h => h.id !== id);
-    localStorage.setItem('pa_history', JSON.stringify(history));
+    store.set('pa_history', JSON.stringify(history));
     renderHistory();
   }
 
   function clearHistory() {
-    localStorage.removeItem('pa_history');
+    store.remove('pa_history');
     renderHistory();
   }
 
-  // Keyboard shortcut
-  document.addEventListener('keydown', e => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      e.preventDefault();
-      generate();
-    }
-  });
+  // ===== BOOT =====
+  init();
+})();
 </script>
 </body>
 </html>
