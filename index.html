@@ -234,8 +234,13 @@
   .opt-chip.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
 
   /* Generate button */
+  .btn-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 4px;
+  }
   .gen-btn {
-    width: 100%;
     padding: 16px;
     background: var(--accent);
     color: #0e0e0f;
@@ -247,7 +252,6 @@
     letter-spacing: 0.05em;
     cursor: pointer;
     transition: all 0.2s;
-    margin-top: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -693,7 +697,7 @@
     <div class="key-privacy">Your key stays in your browser (localStorage). It is only sent directly to the Anthropic API — never to any other server.</div>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+  <div class="btn-row">
     <button class="gen-btn" id="gen-btn">
       <span id="btn-text">Generate prompt</span>
     </button>
