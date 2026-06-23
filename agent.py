@@ -35,7 +35,7 @@ from llm_profiles import get_profile_text, get_profile
 # CONFIG
 # ============================================================
 
-MODEL = "claude-sonnet-4-20250514"
+MODEL = "claude-sonnet-4-6"
 MAX_TOKENS = 4096
 HISTORY_FILE = Path(__file__).parent / ".prompt_history.json"
 
